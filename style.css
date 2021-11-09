@@ -1,0 +1,282 @@
+/* 
+PALETTE COLOR
+
+White: #FFF
+Golden: #D0A85C
+Gunmetal: #0C2F3F
+Grey light: #505050
+Grey light2: #D4D4D4
+Grey dark: #181818
+---------------------------
+TYPOGRAPHY RULES
+
+H1: 24px bold
+H2: 20px italic
+H3: 18px uppercase
+
+*/
+
+/* RESET */
+
+body {
+  box-sizing: border-box;
+  background-color: #181818;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  overflow: overlay;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+  margin: inherit;
+}
+
+/* TYPOGRAPHY */
+
+h1 {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 24px;
+}
+h2 {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 20px;
+}
+h3 {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+p,
+input {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+/* SECTIONS */
+
+.container {
+  color: #fff;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  background-color: #0c2f3f;
+  height: 60px;
+
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header__title {
+  font-family: 'Righteous', cursive;
+  font-size: 24px;
+}
+
+.header__logo {
+  width: 45px;
+  height: 45px;
+}
+
+.showercase {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+/* SEARCH COMPONENT */
+
+.search {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+
+  position: relative;
+}
+
+.search__input {
+  height: 20px;
+  width: 170px;
+  background-color: transparent;
+  background-image: url(/img/search-icon.svg);
+  background-repeat: no-repeat;
+  background-size: 21px;
+  padding-left: 30px;
+  padding-bottom: 1.5px;
+  border: none;
+  color: #fff;
+
+  /* transform: translateY(-40px);
+  opacity: 0;
+  animation: start 0.5s 0.5s ease-out forwards; */
+}
+
+.search__input:focus-visible {
+  outline: none;
+  border-bottom: 1.5px solid #d4d4d4;
+  padding-bottom: 0;
+}
+
+.search__collection {
+  display: flex;
+  flex-direction: column;
+
+  position: absolute;
+  z-index: 200;
+  top: 20px;
+  background: rgba(0, 0, 0, 0.831);
+
+  height: 90px;
+  overflow-y: overlay;
+}
+
+.search__item {
+  width: 170px;
+  padding-left: 30px;
+
+  font-weight: 300;
+  font-size: 13px;
+}
+
+.search__item:hover {
+  background-color: #d4d4d4;
+  color: #181818;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.search__result {
+  height: 462px;
+}
+
+/* .search__collection::-webkit-scrollbar {
+  background-color: aqua;
+  scrollbar-width: thin;
+}
+
+.search__collection::-webkit-scrollbar-thumb {
+  background-color: blue;
+} */
+
+/* CARD COMPONENT */
+
+.card {
+  width: 266px;
+  height: 462px;
+  margin: 0 auto;
+  padding: 10px 0 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border: 5px solid #d0a85c;
+  border-radius: 20px;
+
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.card__tag-container {
+  width: 100%;
+  padding: 20px 0;
+
+  display: flex;
+}
+
+.card__tag-container > * {
+  display: inline-block;
+}
+
+.card__lore {
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 13px;
+  font-weight: 300;
+  padding: 10px;
+  border-radius: 0 0 15px 15px;
+  line-height: 1.3;
+}
+
+.card__pin--up {
+  background-image: url(/img/pinUp-icon.svg);
+  width: 25px;
+  height: 25px;
+  position: absolute;
+  right: 3%;
+  opacity: 0;
+  visibility: hidden;
+  cursor: pointer;
+}
+
+.card:hover > .card__pin--up {
+  visibility: visible;
+  opacity: 1;
+}
+
+.card__pin--down {
+  background-image: url(/img/pinDown-icon.svg);
+  width: 25px;
+  height: 25px;
+  position: absolute;
+  right: 3%;
+  opacity: 1;
+  cursor: pointer;
+}
+
+.card__pin--down:hover {
+  background-image: url(/img/pinUp-icon.svg);
+}
+
+.card.load {
+  transform: translateY(-17px);
+  opacity: 0;
+  visibility: hidden;
+  animation: fadeInTop 0.4s ease-out forwards;
+}
+
+.card.unload {
+  animation: fadeOutDown 0.2s ease-out forwards;
+  /* opacity: 0;
+  visibility: hidden; */
+}
+
+/* ANIMATIONS */
+
+@keyframes start {
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes fadeInTop {
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+    visibility: visible;
+  }
+}
+
+@keyframes fadeOutDown {
+  100% {
+    opacity: 0;
+    transform: translateY(300px);
+  }
+}

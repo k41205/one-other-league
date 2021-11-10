@@ -20,7 +20,7 @@ const autocompleteMatch = function (string, arr) {
   if (input == '') {
     return [];
   }
-  // Define a RegExp
+  // Giving string array of champ names as an argument for our regex, second argument to say has to be case insensitive
   const reg = new RegExp(input, 'i');
   return arr.filter((term) => {
     if (term.match(reg)) {
@@ -28,69 +28,6 @@ const autocompleteMatch = function (string, arr) {
     }
   });
 };
-
-// const getChamp = async function (champ) {
-//   try {
-//     const req = await fetch(
-//       `https://ddragon.leagueoflegends.com/cdn/11.21.1/data/en_US/champion/${champ}.json`
-//     );
-//     const res = await req.json();
-//     return res.data[champ];
-//   } catch (e) {
-//     console.error(`MANAGED: ${e}`);
-//   }
-// };
-
-// DRY principle to apply, I should generate element tag x2 plus using literal template.
-// I don't know what array method to use to get values while performing a forEach or should I use another method to loop the tags array?
-// const populateCard = function (champ) {
-//   let tag1 = champ.tags[0];
-//   let tag2;
-//   let html;
-//   if (champ.tags.length === 2) {
-//     tag2 = champ.tags[1];
-//     html = `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ.id}_0.jpg');">
-//     <div class="card__pin--up"></div>
-//   <h1 class="card__name">${champ.name}</h1>
-//   <h2 class="card__title">${champ.title}</h2>
-//   <div class="card__tag-container">
-//     <h3 class="card__tags">${tag1}</h3>
-//     <h3 class="card__tags">${tag2}</h3>
-//   </div>
-//   <p class="card__lore">
-//   ${champ.lore}
-//   </p>
-//   </article>`;
-//   } else {
-//     html = `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ.id}_0.jpg');">
-//     <div class="card__pin--up"></div>
-//   <h1 class="card__name">${champ.name}</h1>
-//   <h2 class="card__title">${champ.title}</h2>
-//   <div class="card__tag-container">
-//     <h3 class="card__tags">${tag1}</h3>
-//   </div>
-//   <p class="card__lore">
-//   ${champ.lore}
-//   </p>
-//   </article>`;
-//   }
-//   return html;
-// };
-
-// const Card = {
-//   create: async function (champ) {
-//     const dataChamp = await getChamp(champ);
-//     const htmlCard = populateCard(dataChamp);
-//     this.renderCard(htmlCard);
-//   },
-//   renderCard: function (htmlToInject) {
-//     if (searchResult.innerHTML !== '') searchResult.innerHTML = '';
-//     searchResult.insertAdjacentHTML('afterbegin', htmlToInject);
-//     const card = document.querySelector('.card');
-//     // card.style.background = `linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ}_0.jpg)`;
-//     card.classList.add('load');
-//   },
-// };
 
 class Card {
   constructor(champ) {
@@ -111,37 +48,22 @@ class Card {
   }
 
   populateCard(champ) {
-    let tag1 = champ.tags[0];
-    let tag2;
-    let html;
-    if (champ.tags.length === 2) {
-      tag2 = champ.tags[1];
-      html = `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ.id}_0.jpg');">
+    return `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
+      champ.id
+    }_0.jpg');">
       <div class="card__pin--up"></div>
     <h1 class="card__name">${champ.name}</h1>
     <h2 class="card__title">${champ.title}</h2>
     <div class="card__tag-container">
-      <h3 class="card__tags">${tag1}</h3>
-      <h3 class="card__tags">${tag2}</h3>
+      ${champ.tags
+        .map((el) => '<h3 class="card__tags">'.concat(el).concat('</h3>'))
+        .join()
+        .replace(',', '')}
     </div>
     <p class="card__lore">
     ${champ.lore}
     </p>
     </article>`;
-    } else {
-      html = `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ.id}_0.jpg');">
-      <div class="card__pin--up"></div>
-    <h1 class="card__name">${champ.name}</h1>
-    <h2 class="card__title">${champ.title}</h2>
-    <div class="card__tag-container">
-      <h3 class="card__tags">${tag1}</h3>
-    </div>
-    <p class="card__lore">
-    ${champ.lore}
-    </p>
-    </article>`;
-    }
-    return html;
   }
 
   renderCard = async function (dom) {

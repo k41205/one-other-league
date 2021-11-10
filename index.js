@@ -16,16 +16,14 @@ let champNames;
 //////////////////////////////
 
 const autocompleteMatch = function (string, arr) {
-  const input = string.toLowerCase();
-  // Returned an empty array for no input given
+  const input = string;
   if (input == '') {
     return [];
   }
   // Define a RegExp
-  const reg = new RegExp(input);
+  const reg = new RegExp(input, 'i');
   return arr.filter((term) => {
-    // To avoid case sensitive. Better doing this into regex.
-    if (term.toLowerCase().match(reg)) {
+    if (term.match(reg)) {
       return term;
     }
   });

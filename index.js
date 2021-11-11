@@ -1,16 +1,10 @@
 'use strict';
 
-// VARS
-//////////////////////////////
-
-// DOM vars
-const searchCollection = document.querySelector('.search__collection');
-const searchInput = document.querySelector('.search__input');
-const searchResult = document.querySelector('.search__result');
-const showercase = document.querySelector('.showercase');
-
-// Data vars
-let champNames;
+/* TODO:
+- reorganize code in modules
+- implement try-catch to manage errors and discard promise when rejected
+- make unavailable search till the autocomplete function is ready
+*/
 
 // FUNCTIONS
 //////////////////////////////
@@ -20,7 +14,7 @@ const autocompleteMatch = function (string, arr) {
   if (input == '') {
     return [];
   }
-  // Giving string array of champ names as an argument for our regex, second argument to say has to be case insensitive
+  // Giving string array of champ names as an argument for our regex, second argument to say it has to be case insensitive
   const reg = new RegExp(input, 'i');
   return arr.filter((term) => {
     if (term.match(reg)) {
@@ -30,12 +24,18 @@ const autocompleteMatch = function (string, arr) {
 };
 
 class Card {
-  constructor(champ) {
+  constructor(champion) {
     this.id = Date.now();
-    this.html = this.createCard(champ).then((html) => (this.html = html));
+    this.init(champion);
   }
 
-  async getChamp(champ) {
+  // TODO: implement try-catch
+  async init(champ) {
+    this.champ = await this.initChamp(champ);
+    this.html = this.initHtml(this.champ);
+  }
+
+  async initChamp(champ) {
     try {
       const req = await fetch(
         `https://ddragon.leagueoflegends.com/cdn/11.21.1/data/en_US/champion/${champ}.json`
@@ -47,8 +47,10 @@ class Card {
     }
   }
 
-  populateCard(champ) {
-    return `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
+  initHtml(champ) {
+    return `<article class="card" data-id="${
+      this.id
+    }" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
       champ.id
     }_0.jpg');">
       <div class="card__pin--up"></div>
@@ -66,45 +68,40 @@ class Card {
     </article>`;
   }
 
-  renderCard = async function (dom) {
-    const html = await this.html;
-    dom.insertAdjacentHTML('afterbegin', html);
-    const card = document.querySelector('.card');
-    card.classList.add('load');
-  };
+  async getHtml() {
+    return new Promise((resolve, reject) => {
+      let i = 0;
+      // wait that this.html has been fetched for 5 seconds ()
+      const check = setInterval(() => {
+        if (this.html) {
+          clearInterval(check);
+          resolve(this.html);
+        }
+        if (i === 45) {
+          clearInterval(check);
+          reject('error');
+        }
+        i++;
+      }, 100);
+    });
+  }
 
-  renderCard2 = function (dom) {
-    dom.insertAdjacentHTML('beforeend', this.html);
-    const card = document.querySelector(
-      `.card[data-id="${this.id}"]>.card__pin--up`
-    );
-    card.classList.remove('card__pin--up');
-    card.classList.add('card__pin--down');
-  };
+  async render(dom) {
+    const html = await this.getHtml();
+    dom.insertAdjacentHTML('beforeend', html);
+    if (dom === searchResult) dom.firstElementChild.classList.add('load');
+  }
 
-  disruptCard = function () {
-    const card = document.querySelector('.card');
-    card.classList.remove('load');
-    card.classList.add('unload');
-  };
-
-  disruptCard2 = function () {
-    const card = document.querySelector(`.card[data-id="${this.id}"]`);
-    card.remove();
-  };
-
-  createCard = async function (champ) {
-    const dataChamp = await this.getChamp(champ);
-    const htmlCard = this.populateCard(dataChamp);
-    return htmlCard;
-  };
+  async disrupt() {
+    const dom = document.querySelector(`.card[data-id="${this.id}"]`);
+    dom.remove();
+  }
 
   static deck = [];
-  addDeck = function (card) {
-    Card.deck.push(card);
-    const a = this.html.split('article');
-    const b = ` data-id="${this.id}" `;
-    this.html = a[0] + 'article' + b + a[1] + 'article' + a[2];
+
+  addDeck = function () {
+    // this.html add class pin-down
+    Card.deck.push(this);
   };
 
   static removeDeck = function (index) {
@@ -115,6 +112,16 @@ class Card {
 
 // MAIN
 //////////////////////////////
+
+// DOM vars
+const searchCollection = document.querySelector('.search__collection');
+const searchInput = document.querySelector('.search__input');
+const searchResult = document.querySelector('.search__result');
+const showercase = document.querySelector('.showercase');
+
+// Data vars
+let champNames;
+let newCard;
 
 // Fetching data to fill autocomplete db
 (async function () {
@@ -128,8 +135,6 @@ class Card {
     console.error(`MANAGED [autocomplete func not available]: ${e}`);
   }
 })();
-
-let newCard;
 
 // Event Listener Delegator
 document.addEventListener('click', (e) => {
@@ -161,15 +166,16 @@ document.addEventListener('click', (e) => {
     searchInput.value = e.target.innerText;
     newCard = new Card(searchInput.value);
     if (searchResult.innerHTML !== '') searchResult.innerHTML = '';
-    newCard.renderCard(searchResult);
+    newCard.render(searchResult);
   }
 
   if (e.target.className === 'card__pin--up') {
-    newCard.addDeck(newCard);
-    newCard.disruptCard();
+    newCard.addDeck();
+    newCard.disrupt();
     Card.deck.forEach((card) => {
+      // to render once each card of the deck
       if (document.querySelectorAll(`[data-id="${card.id}"]`).length === 0) {
-        card.renderCard2(showercase);
+        card.render(showercase);
       }
     });
   }

@@ -109,32 +109,9 @@ class Card {
 
   static removeDeck = function (index) {
     const cardDeleted = Card.deck.splice(index, 1);
-    console.log(cardDeleted);
-
     cardDeleted[0].disruptCard2();
   };
 }
-
-// let a;
-// Card.deck[0].html.then(html=>a=html);
-// const b= a.split('article');
-// const c = ` data-id="${this.id}" `;
-// const d = b[0]+'article'+c+b[1]+'article'+b[2]
-
-// const renderCard = function (htmlToInject) {
-//   if (searchResult.innerHTML !== '') searchResult.innerHTML = '';
-//   searchResult.insertAdjacentHTML('afterbegin', htmlToInject);
-//   const card = document.querySelector('.card');
-//   // card.style.background = `linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champ}_0.jpg)`;
-//   card.classList.add('load');
-//   console.log(htmlToInject);
-// };
-
-// const createCard = async function (champ) {
-//   const dataChamp = await getChamp(champ);
-//   const htmlCard = populateCard(dataChamp);
-//   renderCard(htmlCard);
-// };
 
 // MAIN
 //////////////////////////////
@@ -195,17 +172,11 @@ document.addEventListener('click', (e) => {
         card.renderCard2(showercase);
       }
     });
-    // .renderCard(showercase);
   }
 
   if (e.target.className === 'card__pin--down') {
-    // console.log(e.target.parentElement.dataset.id);
     const id = Number(e.target.parentElement.dataset.id);
-    // console.log(id);
-
     const cardSelected = Card.deck.find((card) => card.id === id);
-    console.log(cardSelected);
-
     const indexCard = Card.deck.findIndex((card) => card.id === id);
     Card.removeDeck(indexCard);
   }

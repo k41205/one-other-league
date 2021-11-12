@@ -23,16 +23,29 @@ const autocompleteMatch = function (string, arr) {
   });
 };
 
+const stringToHtmlElement = function (str) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, 'text/html');
+  return doc.body.firstChild;
+};
+
 class Card {
   constructor(champion) {
-    this.id = Date.now();
     this.init(champion);
   }
+
+  static deck = [];
 
   // TODO: implement try-catch
   async init(champ) {
     this.champ = await this.initChamp(champ);
-    this.html = this.initHtml(this.champ);
+    this.htmlStr = this.initHtml(this.champ); //make this html a DOM element so it would be easier to manage
+    this.html = stringToHtmlElement(this.htmlStr);
+    // const a = new DOMParser();
+    // this.html = a.parseFromString(str, 'text/html');
+    // let a = document.createElement('article')
+    // a.classList.add('card')
+    // a.setAttribute('data-id',this.id)
   }
 
   async initChamp(champ) {
@@ -48,9 +61,7 @@ class Card {
   }
 
   initHtml(champ) {
-    return `<article class="card" data-id="${
-      this.id
-    }" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
+    return `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
       champ.id
     }_0.jpg');">
       <div class="card__pin--up"></div>
@@ -88,25 +99,28 @@ class Card {
 
   async render(dom) {
     const html = await this.getHtml();
-    dom.insertAdjacentHTML('beforeend', html);
+    dom.append(html);
+
     if (dom === searchResult) dom.firstElementChild.classList.add('load');
   }
 
   async disrupt() {
-    const dom = document.querySelector(`.card[data-id="${this.id}"]`);
-    dom.remove();
+    this.html.remove();
   }
-
-  static deck = [];
 
   addDeck = function () {
     // this.html add class pin-down
+    this.id = Date.now();
+    this.html.setAttribute('data-id', this.id);
+    this.html.firstElementChild.classList.remove('card__pin--up');
+    this.html.firstElementChild.classList.add('card__pin--down');
     Card.deck.push(this);
   };
 
-  static removeDeck = function (index) {
-    const cardDeleted = Card.deck.splice(index, 1);
-    cardDeleted[0].disruptCard2();
+  removeDeck = function () {
+    const index = Card.deck.indexOf(this);
+    Card.deck.splice(index, 1);
+    this.disrupt();
   };
 }
 
@@ -122,7 +136,8 @@ const showercase = document.querySelector('.showercase');
 // Data vars
 let champNames;
 let newCard;
-
+// const test = new Card('Ashe');
+// Card.deck.push(test);
 // Fetching data to fill autocomplete db
 (async function () {
   try {
@@ -138,6 +153,7 @@ let newCard;
 
 // Event Listener Delegator
 document.addEventListener('click', (e) => {
+  // e.stopImmediatePropagation();
   // Manage the digit on the search list component
   if (e.target === searchInput) {
     searchInput.addEventListener('input', (ev) => {
@@ -150,7 +166,7 @@ document.addEventListener('click', (e) => {
       searchCollection.innerHTML = '';
       matchedItems.forEach((el) => {
         const searchItemHTML = `<span class="search__item" data-champ="${el}">${el}</span>`;
-        // To avoid collecting multiple times items that already match with the input search
+        // require search__item to be unique
         if (
           document.querySelectorAll(`[data-champ=${el}]`)[0] !== searchItemHTML
         )
@@ -161,29 +177,28 @@ document.addEventListener('click', (e) => {
     searchCollection.innerHTML = '';
   }
 
-  // Manage the click on the searched champ by populating the card with the info relying on the searched champion
+  // create new card
   if (e.target.className === 'search__item') {
     searchInput.value = e.target.innerText;
     newCard = new Card(searchInput.value);
     if (searchResult.innerHTML !== '') searchResult.innerHTML = '';
+    searchResult.classList.remove('unload');
     newCard.render(searchResult);
   }
 
+  // add card to deck
   if (e.target.className === 'card__pin--up') {
+    searchResult.classList.add('unload');
     newCard.addDeck();
-    newCard.disrupt();
-    Card.deck.forEach((card) => {
-      // to render once each card of the deck
-      if (document.querySelectorAll(`[data-id="${card.id}"]`).length === 0) {
-        card.render(showercase);
-      }
-    });
+    Card.deck.at(-1).render(showercase);
+    return;
   }
 
+  // remove card from deck
   if (e.target.className === 'card__pin--down') {
     const id = Number(e.target.parentElement.dataset.id);
     const cardSelected = Card.deck.find((card) => card.id === id);
-    const indexCard = Card.deck.findIndex((card) => card.id === id);
-    Card.removeDeck(indexCard);
+    cardSelected.removeDeck();
+    return;
   }
 });

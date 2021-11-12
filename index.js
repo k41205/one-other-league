@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /* TODO:
 - reorganize code in modules
@@ -11,11 +11,11 @@
 
 const autocompleteMatch = function (string, arr) {
   const input = string;
-  if (input == '') {
+  if (input == "") {
     return [];
   }
   // Giving string array of champ names as an argument for our regex, second argument to say it has to be case insensitive
-  const reg = new RegExp(input, 'i');
+  const reg = new RegExp(input, "i");
   return arr.filter((term) => {
     if (term.match(reg)) {
       return term;
@@ -23,16 +23,29 @@ const autocompleteMatch = function (string, arr) {
   });
 };
 
+const stringToHtmlElement = function (str) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, "text/html");
+  return doc.body.firstChild;
+};
+
 class Card {
   constructor(champion) {
-    this.id = Date.now();
     this.init(champion);
   }
+
+  static deck = [];
 
   // TODO: implement try-catch
   async init(champ) {
     this.champ = await this.initChamp(champ);
-    this.html = this.initHtml(this.champ);
+    this.htmlStr = this.initHtml(this.champ); //make this html a DOM element so it would be easier to manage
+    this.html = stringToHtmlElement(this.htmlStr);
+    // const a = new DOMParser();
+    // this.html = a.parseFromString(str, 'text/html');
+    // let a = document.createElement('article')
+    // a.classList.add('card')
+    // a.setAttribute('data-id',this.id)
   }
 
   async initChamp(champ) {
@@ -48,9 +61,7 @@ class Card {
   }
 
   initHtml(champ) {
-    return `<article class="card" data-id="${
-      this.id
-    }" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
+    return `<article class="card" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${
       champ.id
     }_0.jpg');">
       <div class="card__pin--up"></div>
@@ -58,9 +69,9 @@ class Card {
     <h2 class="card__title">${champ.title}</h2>
     <div class="card__tag-container">
       ${champ.tags
-        .map((el) => '<h3 class="card__tags">'.concat(el).concat('</h3>'))
+        .map((el) => '<h3 class="card__tags">'.concat(el).concat("</h3>"))
         .join()
-        .replace(',', '')}
+        .replace(",", "")}
     </div>
     <p class="card__lore">
     ${champ.lore}
@@ -79,7 +90,7 @@ class Card {
         }
         if (i === 45) {
           clearInterval(check);
-          reject('error');
+          reject("error");
         }
         i++;
       }, 100);
@@ -88,25 +99,28 @@ class Card {
 
   async render(dom) {
     const html = await this.getHtml();
-    dom.insertAdjacentHTML('beforeend', html);
-    if (dom === searchResult) dom.firstElementChild.classList.add('load');
+    dom.append(html);
+
+    if (dom === searchResult) dom.firstElementChild.classList.add("load");
   }
 
   async disrupt() {
-    const dom = document.querySelector(`.card[data-id="${this.id}"]`);
-    dom.remove();
+    this.html.remove();
   }
-
-  static deck = [];
 
   addDeck = function () {
     // this.html add class pin-down
+    this.id = Date.now();
+    this.html.setAttribute("data-id", this.id);
+    this.html.firstElementChild.classList.remove("card__pin--up");
+    this.html.firstElementChild.classList.add("card__pin--down");
     Card.deck.push(this);
   };
 
-  static removeDeck = function (index) {
-    const cardDeleted = Card.deck.splice(index, 1);
-    cardDeleted[0].disruptCard2();
+  removeDeck = function () {
+    const index = Card.deck.indexOf(this);
+    Card.deck.splice(index, 1);
+    this.disrupt();
   };
 }
 
@@ -114,20 +128,21 @@ class Card {
 //////////////////////////////
 
 // DOM vars
-const searchCollection = document.querySelector('.search__collection');
-const searchInput = document.querySelector('.search__input');
-const searchResult = document.querySelector('.search__result');
-const showercase = document.querySelector('.showercase');
+const searchCollection = document.querySelector(".search__collection");
+const searchInput = document.querySelector(".search__input");
+const searchResult = document.querySelector(".search__result");
+const showercase = document.querySelector(".showercase");
 
 // Data vars
 let champNames;
 let newCard;
-
+// const test = new Card('Ashe');
+// Card.deck.push(test);
 // Fetching data to fill autocomplete db
 (async function () {
   try {
     const req = await fetch(
-      'https://ddragon.leagueoflegends.com/cdn/11.21.1/data/en_US/champion.json'
+      "https://ddragon.leagueoflegends.com/cdn/11.21.1/data/en_US/champion.json"
     );
     const res = await req.json();
     champNames = Object.keys(res.data);
@@ -137,53 +152,53 @@ let newCard;
 })();
 
 // Event Listener Delegator
-document.addEventListener('click', (e) => {
+document.addEventListener("click", (e) => {
+  // e.stopImmediatePropagation();
   // Manage the digit on the search list component
   if (e.target === searchInput) {
-    searchInput.addEventListener('input', (ev) => {
+    searchInput.addEventListener("input", (ev) => {
       // To avoid to trigger again the event passed by main event listener into this one.
       // To see what happen just comment the next command and uncomment the next to it.
       // What difference between stopPropagation and stopImmediatePropagation??
       ev.stopImmediatePropagation();
       // console.log(e.clientY);
       let matchedItems = autocompleteMatch(searchInput.value, champNames);
-      searchCollection.innerHTML = '';
+      searchCollection.innerHTML = "";
       matchedItems.forEach((el) => {
         const searchItemHTML = `<span class="search__item" data-champ="${el}">${el}</span>`;
-        // To avoid collecting multiple times items that already match with the input search
+        // require search__item to be unique
         if (
           document.querySelectorAll(`[data-champ=${el}]`)[0] !== searchItemHTML
         )
-          searchCollection.insertAdjacentHTML('beforeend', searchItemHTML);
+          searchCollection.insertAdjacentHTML("beforeend", searchItemHTML);
       });
     });
   } else {
-    searchCollection.innerHTML = '';
+    searchCollection.innerHTML = "";
   }
 
-  // Manage the click on the searched champ by populating the card with the info relying on the searched champion
-  if (e.target.className === 'search__item') {
+  // create new card
+  if (e.target.className === "search__item") {
     searchInput.value = e.target.innerText;
     newCard = new Card(searchInput.value);
-    if (searchResult.innerHTML !== '') searchResult.innerHTML = '';
+    if (searchResult.innerHTML !== "") searchResult.innerHTML = "";
+    searchResult.classList.remove("unload");
     newCard.render(searchResult);
   }
 
-  if (e.target.className === 'card__pin--up') {
+  // add card to deck
+  if (e.target.className === "card__pin--up") {
+    searchResult.classList.add("unload");
     newCard.addDeck();
-    newCard.disrupt();
-    Card.deck.forEach((card) => {
-      // to render once each card of the deck
-      if (document.querySelectorAll(`[data-id="${card.id}"]`).length === 0) {
-        card.render(showercase);
-      }
-    });
+    Card.deck.at(-1).render(showercase);
+    return;
   }
 
-  if (e.target.className === 'card__pin--down') {
+  // remove card from deck
+  if (e.target.className === "card__pin--down") {
     const id = Number(e.target.parentElement.dataset.id);
     const cardSelected = Card.deck.find((card) => card.id === id);
-    const indexCard = Card.deck.findIndex((card) => card.id === id);
-    Card.removeDeck(indexCard);
+    cardSelected.removeDeck();
+    return;
   }
 });
